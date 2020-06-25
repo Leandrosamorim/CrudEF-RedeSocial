@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "mssql1": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourcegroups/[parameters('resourceGroup')]/providers/Microsoft.Sql/servers/tp3appdbserver/databases/WebApplication14_db",
+      "type": "mssql.azure",
+      "connectionId": "WebApplication14Context",
+      "secretStore": "AzureAppSettings"
+    },
+    "storage1": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroup')]/providers/Microsoft.Storage/storageAccounts/tp3app",
+      "type": "storage.azure",
+      "connectionId": "StorageAccount",
+      "secretStore": "AzureAppSettings"
+    },
+    "mssql2": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroup')]/providers/Microsoft.Sql/servers/tp3appdbserver/databases/WebApplication14_db",
+      "type": "mssql.azure",
+      "connectionId": "IdentityDbContextConnection",
+      "secretStore": "AzureAppSettings"
+    },
+    "storage2": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroup')]/providers/Microsoft.Storage/storageAccounts/userimages2",
+      "type": "storage.azure",
+      "connectionId": "StorageAccount",
+      "secretStore": null
+    }
+  }
+}

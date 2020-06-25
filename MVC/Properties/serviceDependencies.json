@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "mssql1": {
+      "type": "mssql",
+      "connectionId": "WebApplication14Context"
+    },
+    "mssql2": {
+      "type": "mssql",
+      "connectionId": "IdentityDbContextConnection"
+    },
+    "storage1": {
+      "type": "storage",
+      "connectionId": "StorageAccount"
+    },
+    "storage2": {
+      "type": "storage",
+      "connectionId": "StorageAccount"
+    },
+    "mssql3": {
+      "type": "mssql",
+      "connectionId": "PostContext"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "dependencies": {
+    "mssql1": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroup')]/providers/Microsoft.Sql/servers/tp3appdbserver/databases/WebApplication14_db",
+      "type": "mssql.azure",
+      "connectionId": "WebApplication14Context",
+      "secretStore": "LocalSecretsFile"
+    },
+    "mssql2": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroup')]/providers/Microsoft.Sql/servers/tp3appdbserver/databases/WebApplication14_db",
+      "type": "mssql.azure",
+      "connectionId": "IdentityDbContextConnection",
+      "secretStore": "LocalSecretsFile"
+    },
+    "storage1": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroup')]/providers/Microsoft.Storage/storageAccounts/tp3app",
+      "type": "storage.azure",
+      "connectionId": "StorageAccount",
+      "secretStore": "LocalSecretsFile"
+    },
+    "storage2": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroup')]/providers/Microsoft.Storage/storageAccounts/tp3app",
+      "type": "storage.azure",
+      "connectionId": "StorageAccount",
+      "secretStore": "LocalSecretsFile"
+    },
+    "mssql3": {
+      "type": "mssql.local",
+      "connectionId": "PostContext"
+    }
+  }
+}
