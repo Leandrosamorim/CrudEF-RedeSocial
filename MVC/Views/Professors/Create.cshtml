@@ -27,9 +27,10 @@
                 <input asp-for="Birth" class="form-control" />
                 <span asp-validation-for="Birth" class="text-danger"></span>
             </div>
-            <div class="form-group form-check">
+            <div class="form-group">
                 <label asp-for="ImageUri" class="control-label"></label>
-                <input type="file" name="ImageFile" class="form-control" required accept=".png" />
+                <input asp-for="ImageUri" class="form-control" />
+                <span asp-validation-for="ImageUri" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Email" class="control-label"></label>

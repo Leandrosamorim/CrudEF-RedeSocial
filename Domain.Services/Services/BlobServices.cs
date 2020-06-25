@@ -3,6 +3,7 @@ using Domain.Models.Interfaces.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,6 +21,11 @@ namespace Domain.Services.Services
 
             public async Task<string> UploadAsync(string Uri)
             {
+            using var webClient = new WebClient();
+            var imageBytes = webClient.DownloadData(Uri);
+
+            var stream = new MemoryStream(imageBytes);
+
                 var containerClient = _blobServiceClient.GetBlobContainerClient(_container);
 
                 if (!await containerClient.ExistsAsync())
@@ -30,7 +36,7 @@ namespace Domain.Services.Services
 
                 var blobClient = containerClient.GetBlobClient($"{Guid.NewGuid()}.jpg");
 
-                await blobClient.UploadAsync(Uri, true);
+                await blobClient.UploadAsync(stream, true);
 
                 return blobClient.Uri.ToString();
             }

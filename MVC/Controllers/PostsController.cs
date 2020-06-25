@@ -17,171 +17,168 @@ using WebApplication14.HttpServices;
 
 namespace WebApplication14.Controllers
 {
-        public class PostsController : Controller
+    public class PostsController : Controller
+    {
+        private readonly IPostHttpServices _postServices;
+        private readonly IAuthorizationService _authService;
+        private readonly UserManager<IdentityUser> _post;
+
+        public PostsController(IPostHttpServices postServices, IProfessorHttpServices professorServices, IAuthorizationService authService, UserManager<IdentityUser> post)
         {
-            private readonly IPostHttpServices _postServices;
-            private readonly IProfessorHttpServices _professorServices;
-            private readonly IAuthorizationService _authService;
-            private readonly UserManager<IdentityUser> _post;
+            _postServices = postServices;
+            _authService = authService;
+            _post = post;
+        }
 
-            public PostsController(IPostHttpServices postServices, IProfessorHttpServices professorServices, IAuthorizationService authService, UserManager<IdentityUser> post)
+        // GET: Posts
+        [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any, NoStore = false)]
+        public async Task<IActionResult> Index()
+        {
+            return View(await _postServices.GetAllAsync());
+        }
+
+        // GET: Posts/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
             {
-                _postServices = postServices;
-                _professorServices = professorServices;
-                _authService = authService;
-                _post = post;
+                return NotFound();
             }
 
-            // GET: Posts
-            [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any, NoStore = false)]
-            public async Task<IActionResult> Index()
+            var post = await _postServices.GetByIdAsync(id.Value);
+
+            if (post == null)
             {
-                return View(await _postServices.GetAllAsync());
+                return NotFound();
             }
 
-            // GET: Posts/Details/5
-            public async Task<IActionResult> Details(int? id)
-            {
-                if (id == null)
-                {
-                    return NotFound();
-                }
+            return View(post);
+        }
 
-                var post = await _postServices.GetByIdAsync(id.Value);
+        // GET: Posts/Create
+        public IActionResult Create()
+        {
+            return View();
+        }
 
-                if (post == null)
-                {
-                    return NotFound();
-                }
-
-                return View(post);
-            }
-
-            // GET: Posts/Create
-            public IActionResult Create()
-            {
-                return View();
-            }
-
-            // POST: Posts/Create
-            // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-            // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-            [HttpPost]
-            [ValidateAntiForgeryToken]
-            public async Task<IActionResult> Create(Post post)
-            {
+        // POST: Posts/Create
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Post post)
+        {
             var userMail = User.Identity.Name;
             post.OwnerEmail = userMail;
+            try
+            {
+                await _postServices.InsertAsync(post);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (EntityValidationException e)
+            {
+                ModelState.AddModelError(e.PropertyName, e.Message);
+            }
+
+            return View(post);
+        }
+
+        // GET: Posts/Edit/5
+        [Authorize]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var post = await _postServices.GetByIdAsync(id.Value);
+            if (post == null)
+            {
+                return NotFound();
+            }
+            var isAuthorized = await _authService.AuthorizeAsync(
+                                                  User, post,
+                                                  ContactOperations.Update);
+
+            if (User.Identity.Name != post.OwnerEmail && !(post.OwnerEmail == null))
+                {
+                    return Forbid();
+                }
+
+
+                return View(post);
+            }
+
+        // POST: Posts/Edit/5
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Post post)
+        {
+            if (id != post.Id)
+            {
+                return NotFound();
+            }
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
                 try
                 {
-                    await _postServices.InsertAsync(post);
-                    return RedirectToAction(nameof(Index));
+                    var updatedPost = await _postServices.GetByIdAsync(id);
+                    post.OwnerEmail = updatedPost.OwnerEmail;
+                    var file = Request.Form.Files.SingleOrDefault();
+
+                    await _postServices.UpdateAsync(post);
                 }
-                catch (EntityValidationException e)
+                catch (DbUpdateConcurrencyException)
                 {
-                    ModelState.AddModelError(e.PropertyName, e.Message);
-                }
-
-                return View(post);
-            }
-
-            // GET: Posts/Edit/5
-            [Authorize]
-            public async Task<IActionResult> Edit(int? id)
-            {
-                if (id == null)
-                {
-                    return NotFound();
-                }
-
-                var post = await _postServices.GetByIdAsync(id.Value);
-                if (post == null)
-                {
-                    return NotFound();
-                }
-                var isAuthorized = await _authService.AuthorizeAsync(
-                                                      User, post,
-                                                      ContactOperations.Update);
-
-                if (User.Identity.Name != post.OwnerEmail)
-                {
-                    return Forbid();
-                }
-
-
-                return View(post);
-            }
-
-            // POST: Posts/Edit/5
-            // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-            // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-            [HttpPost]
-            [ValidateAntiForgeryToken]
-            public async Task<IActionResult> Edit(int id, Post post)
-            {
-                if (id != post.Id)
-                {
-                    return NotFound();
-                }
-
-                if (post == null)
-                {
-                    return NotFound();
-                }
-
-                if (ModelState.IsValid)
-                {
-                    try
+                    if (_postServices.GetByIdAsync(post.Id) != null)
                     {
-                        var file = Request.Form.Files.SingleOrDefault();
-                        post.BlobUri = file?.OpenReadStream().ToString();
-
-                        await _postServices.UpdateAsync(post);
+                        return NotFound();
                     }
-                    catch (DbUpdateConcurrencyException)
+                    else
                     {
-                        if (_postServices.GetByIdAsync(post.Id) != null)
-                        {
-                            return NotFound();
-                        }
-                        else
-                        {
-                            throw;
-                        }
+                        throw;
                     }
-                    return RedirectToAction(nameof(Index));
                 }
-                return View(post);
+                return RedirectToAction(nameof(Index));
             }
-
-            // GET: Posts/Delete/5
-            public async Task<IActionResult> Delete(int? id)
+            return View(post);
+        }
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
             {
-                if (id == null)
-                {
-                    return NotFound();
-                }
-
-                var post = await _postServices.GetByIdAsync(id.Value);
-
-                if (post == null)
-                {
-                    return NotFound();
-                }
-                var isAuthorized = await _authService.AuthorizeAsync(
-                                                     User, post,
-                                                     ContactOperations.Update);
-
-                if (User.Identity.Name != post.OwnerEmail)
-                {
-                    return Forbid();
-                }
-
-                return View(post);
+                return NotFound();
             }
 
-            // POST: Posts/Delete/5
-            [HttpPost, ActionName("Delete")]
+            var post = await _postServices.GetByIdAsync(id.Value);
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+            var isAuthorized = await _authService.AuthorizeAsync(
+                                                 User, post,
+                                                 ContactOperations.Update);
+
+            if (User.Identity.Name != post.OwnerEmail)
+            {
+                return Forbid();
+            }
+
+            return View(post);
+        }
+
+        // POST: Posts/Delete/5
+        [HttpPost, ActionName("Delete")]
             [ValidateAntiForgeryToken]
             public async Task<IActionResult> DeleteConfirmed(Post post)
             {

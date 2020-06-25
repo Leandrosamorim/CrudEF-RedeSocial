@@ -27,9 +27,9 @@ namespace Web_API.Controllers
 
         // GET: api/Professors
         [HttpGet]
-        public ActionResult<IEnumerable<Professor>> GetProfessor()
+        public async Task<ActionResult<IEnumerable<Professor>>> GetProfessor()
         {
-            var professores = _professorServices.GetAllAsync();
+            var professores = await _professorServices.GetAllAsync();
             return Ok(professores);
         }
 

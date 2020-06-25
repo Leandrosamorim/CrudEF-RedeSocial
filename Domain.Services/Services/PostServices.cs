@@ -1,4 +1,5 @@
-﻿using Domain.Models.Interfaces.Repositories;
+﻿using Azure.Storage.Blobs.Models;
+using Domain.Models.Interfaces.Repositories;
 using Domain.Models.Interfaces.Services;
 using Domain.Models.Models;
 using Newtonsoft.Json;
@@ -55,6 +56,7 @@ namespace Domain.Services.Services
                 string jsonMessageBase64 = Convert.ToBase64String(bytesJsonMessage);
 
                 await _queueService.SendAsync(jsonMessageBase64);
+                await _postRepository.InsertAsync(insertedEntity);
             }
 
             public async Task UpdateAsync(Post updatedEntity)

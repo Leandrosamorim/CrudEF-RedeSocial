@@ -3,11 +3,13 @@ using Domain.Models.Models;
 using Domain.Models.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +19,7 @@ namespace WebApplication14.HttpServices
     public class ProfessorHttpServices : IProfessorHttpServices
     {
         private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IOptionsMonitor<ProfessorHttpOptions> _professorHttpOptions;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly SignInManager<IdentityUser> _signInManager;
@@ -27,12 +30,13 @@ namespace WebApplication14.HttpServices
             IHttpContextAccessor httpContextAccessor,
             SignInManager<IdentityUser> signInManager)
         {
+            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _professorHttpOptions = professorHttpOptions ?? throw new ArgumentNullException(nameof(professorHttpOptions));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _signInManager = signInManager;
             ;
 
-            _httpClient = httpClientFactory?.CreateClient(professorHttpOptions.CurrentValue.Name) ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _httpClient = httpClientFactory.CreateClient(professorHttpOptions.CurrentValue.Name);
             _httpClient.Timeout = TimeSpan.FromMinutes(_professorHttpOptions.CurrentValue.Timeout);
         }
 
@@ -40,13 +44,18 @@ namespace WebApplication14.HttpServices
         {
             var httpResponseMessage = await _httpClient.GetAsync(_professorHttpOptions.CurrentValue.ProfessorPath);
 
-            if (!httpResponseMessage.IsSuccessStatusCode)
+            if (httpResponseMessage.IsSuccessStatusCode)
             {
-                await _signInManager.SignOutAsync();
-                return null;
+                return JsonConvert.DeserializeObject<List<Professor>>(await httpResponseMessage.Content
+                    .ReadAsStringAsync());
             }
 
-            return JsonConvert.DeserializeObject<List<Professor>>(await httpResponseMessage.Content.ReadAsStringAsync());
+            if (httpResponseMessage.StatusCode == HttpStatusCode.Forbidden)
+            {
+                await _signInManager.SignOutAsync();
+            }
+
+            return null;
         }
 
         public async Task<Professor> GetByIdAsync(int id)
@@ -54,21 +63,19 @@ namespace WebApplication14.HttpServices
             var pathWithId = $"{_professorHttpOptions.CurrentValue.ProfessorPath}/{id}";
             var httpResponseMessage = await _httpClient.GetAsync(pathWithId);
 
-            if (!httpResponseMessage.IsSuccessStatusCode)
+            if (httpResponseMessage.IsSuccessStatusCode)
             {
-                //await _signInManager.SignOutAsync();
-                return null;
+                return JsonConvert.DeserializeObject<Professor>(await httpResponseMessage.Content
+                    .ReadAsStringAsync());
             }
 
-            return JsonConvert.DeserializeObject<Professor>(await httpResponseMessage.Content.ReadAsStringAsync());
-        }
+            if (httpResponseMessage.StatusCode == HttpStatusCode.Forbidden)
+            {
+                await _signInManager.SignOutAsync();
+                new RedirectToActionResult("Professor", "Index", null);
+            }
 
-        public async Task<HttpResponseMessage> GetByIdHttpAsync(int id)
-        {
-            var pathWithId = $"{_professorHttpOptions.CurrentValue.ProfessorPath}/{id}";
-            var httpResponseMessage = await _httpClient.GetAsync(pathWithId);
-
-            return httpResponseMessage;
+            return null;
         }
 
         public async Task InsertAsync(Professor insertedEntity)
@@ -99,9 +106,10 @@ namespace WebApplication14.HttpServices
             }
         }
 
-        public async Task DeleteAsync(Professor professor)
+        public async Task DeleteAsync(Professor post)
         {
-            var pathWithId = $"{_professorHttpOptions.CurrentValue.ProfessorPath}/{professor.Id}";
+
+            var pathWithId = $"{_professorHttpOptions.CurrentValue.ProfessorPath}/{post.Id}";
             var httpResponseMessage = await _httpClient.DeleteAsync(pathWithId);
 
             if (!httpResponseMessage.IsSuccessStatusCode)

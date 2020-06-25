@@ -63,6 +63,7 @@ namespace Web_API.Controllers
 
             try
             {
+                await _postServices.UpdateAsync(post);
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -87,6 +88,7 @@ namespace Web_API.Controllers
         public async Task<ActionResult<Post>> PostPost(Post post)
         {
             await _postServices.InsertAsync(post);
+            await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetPost", new { id = post.Id }, post);
         }

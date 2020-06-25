@@ -19,16 +19,17 @@ using Infrastructure.Context.WebApplication14.Data;
 using System.Net.Http;
 using Newtonsoft.Json;
 using WebApplication14.Models;
+using WebApplication14.HttpServices;
 
 namespace WebApplication14.Controllers
 {
     public class ProfessorsController : Controller
     {
-        private readonly IProfessorServices _professorServices;
+        private readonly IProfessorHttpServices _professorServices;
         private readonly IAuthorizationService _authService;
         private readonly UserManager<IdentityUser> _professor;
 
-        public ProfessorsController(IProfessorServices professorServices, IAuthorizationService authService, UserManager<IdentityUser> professor)
+        public ProfessorsController(IProfessorHttpServices professorServices, IAuthorizationService authService, UserManager<IdentityUser> professor)
         {
             _professorServices = professorServices;
             _authService = authService;
@@ -39,8 +40,7 @@ namespace WebApplication14.Controllers
         [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any, NoStore = false)]
         public async Task<IActionResult> Index()
         {
-            var professores = await _professorServices.GetAllAsync();
-            return View(professores);
+            return View(await _professorServices.GetAllAsync());
         }
 
         // GET: Professors/Details/5
